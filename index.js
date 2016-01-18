@@ -69,6 +69,21 @@ function logStashAppender(config, fields, layout) {
         //do stuff with the logging event
         var data = layout(logEvt, fields);
 
+        var categoryNameFromEvent = logEvt.categoryName;
+        var levelFromEvent = logEvt.level && logEvt.level.levelStr;
+
+        var filter = config.filter;
+
+        if (filter && filter.categoryNames &&
+            filter.categoryNames.indexOf(categoryNameFromEvent) === -1) {
+            return;
+        }
+
+        if (filter && filter.levels &&
+            filter.levels.indexOf(levelFromEvent) === -1) {
+            return;
+        }        
+
         if (config.batch === true) {
             messages.push(data);
             clearTimeout(timeOutId);
@@ -118,6 +133,16 @@ function configure(config) {
             }
         }
     }
+
+    if (config.filter && typeof config.filter === 'object') {
+        for (key in config.filter) {
+            if (typeof config.filter[key] !== 'function') {
+                options.filter = options.filter || {};
+                options.filter[key] = config.filter[key];
+            }
+        }
+    }
+
     return logStashAppender(options, fields, layout);
 }
 
